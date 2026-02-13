@@ -1,55 +1,33 @@
-require('dotenv').config();
-const express = require('express');
-const Sentry = require('@sentry/node');
-
-const app = express();
-
-// Initialize Sentry (we'll add DSN later)
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  environment: 'production',
-  tracesSampleRate: 1.0,
-});
-
-app.use(express.json());
-
-// Intentional Error 1: Null reference error
-app.get('/api/user/:id', (req, res) => {
-  const user = null; // Simulating database returning null
-  // This will throw: Cannot read property 'name' of null
-  res.json({ name: user.name, id: req.params.id });
-});
-
-// Intentional Error 2: Division by zero
-app.get('/api/calculate', (req, res) => {
-  const result = 100 / 0; // Infinity - not ideal
-  if (!isFinite(result)) {
-    throw new Error('Division by zero detected');
-  }
-  res.json({ result });
-});
-
-// Intentional Error 3: Undefined variable
-app.get('/api/data', (req, res) => {
-  console.log(undefinedVariable); // ReferenceError
-  res.json({ data: 'test' });
-});
-
-// Intentional Error 4: Async error
-app.get('/api/async-error', async (req, res) => {
-  await Promise.reject(new Error('Async operation failed'));
-  res.json({ success: true });
-});
-
-// Error handler
-app.use(Sentry.Handlers.errorHandler());
-
-app.use((err, req, res, next) => {
-  console.error('Error:', err.message);
-  res.status(500).json({ error: err.message });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Test app running on port ${PORT}`);
-});
+cmVxdWlyZSgnZG90ZW52JykuY29uZmlnKCk7CmNvbnN0IGV4cHJlc3MgPSBy
+ZXF1aXJlKCdleHByZXNzJyk7CmNvbnN0IFNlbnRyeSA9IHJlcXVpcmUoJ0Bz
+ZW50cnkvbm9kZScpOwoKY29uc3QgYXBwID0gZXhwcmVzcygpOwoKLy8gSW5p
+dGlhbGl6ZSBTZW50cnkgKHdlJ2xsIGFkZCBEU04gbGF0ZXIpClNlbnRyeS5p
+bml0KHsKICBkc246IHByb2Nlc3MuZW52LlNFTlRSWV9EU04sCiAgZW52aXJv
+bm1lbnQ6ICdwcm9kdWN0aW9uJywKICB0cmFjZXNTYW1wbGVSYXRlOiAxLjAs
+Cn0pOwoKYXBwLnVzZShleHByZXNzLmpzb24oKSk7CgovLyBJbnRlbnRpb25h
+bCBFcnJvciAxOiBOdWxsIHJlZmVyZW5jZSBlcnJvcgphcHAuZ2V0KCcvYXBp
+L3VzZXIvOmlkJywgKHJlcSwgcmVzKSA9PiB7CiAgY29uc3QgdXNlciA9IG51
+bGw7IC8vIFNpbXVsYXRpbmcgZGF0YWJhc2UgcmV0dXJuaW5nIG51bGwKICAv
+LyBUaGlzIHdpbGwgdGhyb3c6IENhbm5vdCByZWFkIHByb3BlcnR5ICduYW1l
+JyBvZiBudWxsCiAgcmVzLmpzb24oeyBuYW1lOiB1c2VyLm5hbWUsIGlkOiBy
+ZXEucGFyYW1zLmlkIH0pOwp9KTsKCi8vIEludGVudGlvbmFsIEVycm9yIDI6
+IERpdmlzaW9uIGJ5IHplcm8KYXBwLmdldCgnL2FwaS9jYWxjdWxhdGUnLCAo
+cmVxLCByZXMpID0+IHsKICBjb25zdCByZXN1bHQgPSAxMDAgLyAwOyAvLyBJ
+bmZpbml0eSAtIG5vdCBpZGVhbAogIGlmICghaXNGaW5pdGUocmVzdWx0KSkg
+ewogICAgdGhyb3cgbmV3IEVycm9yKCdEaXZpc2lvbiBieSB6ZXJvIGRldGVj
+dGVkJyk7CiAgfQogIHJlcy5qc29uKHsgcmVzdWx0IH0pOwp9KTsKCi8vIElu
+dGVudGlvbmFsIEVycm9yIDM6IFVuZGVmaW5lZCB2YXJpYWJsZQphcHAuZ2V0
+KCcvYXBpL2RhdGEnLCAocmVxLCByZXMpID0+IHsKICBjb25zb2xlLmxvZyh1
+bmRlZmluZWRWYXJpYWJsZSk7IC8vIFJlZmVyZW5jZUVycm9yCiAgcmVzLmpz
+b24oeyBkYXRhOiAndGVzdCcgfSk7Cn0pOwoKLy8gSW50ZW50aW9uYWwgRXJy
+b3IgNDogQXN5bmMgZXJyb3IKYXBwLmdldCgnL2FwaS9hc3luYy1lcnJvcics
+IGFzeW5jIChyZXEsIHJlcykgPT4gewogIGF3YWl0IFByb21pc2UucmVqZWN0
+KG5ldyBFcnJvcignQXN5bmMgb3BlcmF0aW9uIGZhaWxlZCcpKTsKICByZXMu
+anNvbih7IHN1Y2Nlc3M6IHRydWUgfSk7Cn0pOwoKLy8gRXJyb3IgaGFuZGxl
+cgphcHAudXNlKFNlbnRyeS5IYW5kbGVycy5lcnJvckhhbmRsZXIoKSk7Cgph
+cHAudXNlKChlcnIsIHJlcSwgcmVzLCBuZXh0KSA9PiB7CiAgY29uc29sZS5l
+cnJvcignRXJyb3I6JywgZXJyLm1lc3NhZ2UpOwogIHJlcy5zdGF0dXMoNTAw
+KS5qc29uKHsgZXJyb3I6IGVyci5tZXNzYWdlIH0pOwp9KTsKCmNvbnN0IFBP
+UlQgPSBwcm9jZXNzLmVudi5QT1JUIHx8IDMwMDA7CmFwcC5saXN0ZW4oUE9S
+VCwgKCkgPT4gewogIGNvbnNvbGUubG9nKGBUZXN0IGFwcCBydW5uaW5nIG9u
+IHBvcnQgJHtQT1JUfWApOwp9KTs=
