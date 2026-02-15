@@ -75,18 +75,51 @@ app.get('/api/async-error', async (req, res, next) => {
   }
 });
 
+// New route to trigger various non-Error objects being passed to next()
+app.get('/api/trigger-non-error', (req, res, next) => {
+  const errorType = req.query.type;
+  if (errorType === 'string') {
+    next('This is a custom string error message!');
+  } else if (errorType === 'null') {
+    next(null); // Pass null to the error handler
+  } else if (errorType === 'object') {
+    next({ customProperty: 'Some value', another: 123 }); // Pass a plain object
+  } else {
+    next(new Error('Default error for trigger-non-error'));
+  }
+});
+
 // Sentry error handler must be before any other error middleware
 app.use(Sentry.Handlers.errorHandler());
 
 // The default error handler
 app.use((err, req, res, next) => {
-  console.error('Caught by global error handler:', err.message);
-  // Sentry has already handled the error, now send a user-friendly response
-  const statusCode = err.statusCode || 500;
+  // Ensure 'err' is an Error object for consistent handling.
+  // If err is null/undefined, String(err) becomes 'null'/'undefined'.
+  // If err is a string, it becomes the error message.
+  // If err is a plain object, it tries to use its toString() or message.
+  const error = err instanceof Error ? err : new Error(String(err));
+
+  // Refine the error message for specific non-Error cases.
+  let errorMessage = error.message;
+  if (err === null || err === undefined || errorMessage === 'null' || errorMessage === 'undefined') {
+    errorMessage = 'An unknown error occurred';
+  } else if (typeof err === 'object' && !err.message) {
+    // If it's an object without a 'message' property, try to stringify it or use a default.
+    try {
+      errorMessage = JSON.stringify(err);
+    } catch (e) {
+      errorMessage = 'An unknown object error occurred';
+    }
+  }
+
+  console.error('Caught by global error handler:', errorMessage);
+
+  // Safely get the status code from the original error if it's an object, otherwise default to 500.
+  const statusCode = (err && typeof err === 'object' && err.statusCode) ? err.statusCode : 500;
+
   res.status(statusCode).json({
-    error: err.message || 'An unexpected error occurred',
-    // Optionally, hide internal error details in production
-    // message: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message
+    error: errorMessage,
   });
 });
 
